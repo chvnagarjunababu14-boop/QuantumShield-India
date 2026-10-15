@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # QuantumShield India
 
 An educational cybersecurity and **post-quantum readiness** platform, built as a 24-hour hackathon MVP.
@@ -212,3 +213,6 @@ Results from the final verification run:
 - **Educational simulator:** the period-finding demo uses ordinary arithmetic on tiny numbers, and the growth chart is illustrative, not a time estimate.
 - **Print to PDF** relies on the browser's print dialog; layout can vary slightly between browsers.
 - **Optional enhancement not implemented:** a genuine ML-KEM demonstration using a maintained library (e.g. liboqs bindings) was left out of scope for this version.
+=======
+# quantumshield-india
+>>>>>>> 5f6daeb4d4342c80d7bae4cec4fd79de6b947f22
