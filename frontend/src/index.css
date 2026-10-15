@@ -1,0 +1,85 @@
+@import "tailwindcss";
+
+@theme {
+  --color-navy-950: #050b18;
+  --color-navy-900: #0a1428;
+  --color-navy-850: #0d1a33;
+  --color-navy-800: #12213f;
+  --color-navy-700: #1b2e52;
+  --color-navy-600: #284069;
+  --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-navy-950 text-slate-200 antialiased;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-teal-400;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-xl border border-navy-700 bg-navy-900/80 p-5 shadow-lg shadow-black/20;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply bg-teal-500 text-navy-950 hover:bg-teal-400;
+  }
+  .btn-secondary {
+    @apply border border-navy-600 bg-navy-800 text-slate-200 hover:bg-navy-700;
+  }
+  .table-th {
+    @apply px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-400;
+  }
+  .table-td {
+    @apply px-3 py-2 align-top text-sm;
+  }
+}
+
+@keyframes travel {
+  0% { left: 4%; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { left: 88%; opacity: 0; }
+}
+.animate-travel {
+  animation: travel 2.6s ease-in-out infinite;
+}
+
+@keyframes wave {
+  0%, 100% { transform: scaleY(0.4); }
+  50% { transform: scaleY(1); }
+}
+.animate-wave {
+  animation: wave 1.2s ease-in-out infinite;
+  transform-origin: bottom;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-travel, .animate-wave, .animate-pulse, .animate-spin {
+    animation: none !important;
+  }
+}
+
+/* Print-friendly report */
+@media print {
+  @page { margin: 14mm; }
+  body { background: #fff !important; color: #111 !important; }
+  .no-print { display: none !important; }
+  .print-area, .print-area * {
+    color: #111 !important;
+    background: transparent !important;
+    border-color: #bbb !important;
+    box-shadow: none !important;
+  }
+  .print-area { padding: 0 !important; margin: 0 !important; }
+  .print-break { break-inside: avoid; }
+  main { margin: 0 !important; padding: 0 !important; }
+}
