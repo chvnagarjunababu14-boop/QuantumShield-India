@@ -1,20 +1,27 @@
 # Python
-backend/.venv/
 __pycache__/
-*.pyc
+*.py[cod]
+.venv/
+venv/
 .pytest_cache/
+.mypy_cache/
+*.egg-info/
 
 # Node
-frontend/node_modules/
-frontend/dist/
+node_modules/
+dist/
+*.tsbuildinfo
 
-# Environment / secrets
+# Local environment files
 .env
 .env.local
-*.local
+.env.*.local
 
-# OS / editor
+# OS and editors
 .DS_Store
 Thumbs.db
-.vscode/
 .idea/
+.vscode/
+
+# Logs
+*.log
