@@ -289,15 +289,49 @@ CREATE TRIGGER trg_reply_count
 AFTER INSERT OR DELETE ON public.community_replies
 FOR EACH ROW EXECUTE FUNCTION public.update_discussion_reply_count();
 
+-- Security Definer Role Lookup Functions (Eliminates RLS infinite recursion)
+CREATE OR REPLACE FUNCTION public.is_moderator_or_admin()
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT CASE
+    WHEN auth.uid() IS NULL THEN false
+    ELSE EXISTS (
+      SELECT 1 FROM public.user_roles
+      WHERE user_id = auth.uid() AND role IN ('moderator', 'admin')
+    )
+  END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT CASE
+    WHEN auth.uid() IS NULL THEN false
+    ELSE EXISTS (
+      SELECT 1 FROM public.user_roles
+      WHERE user_id = auth.uid() AND role = 'admin'
+    )
+  END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.is_moderator_or_admin() TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.is_admin() TO authenticated;
+
 -- RLS: User Roles
 DROP POLICY IF EXISTS "Users can read own roles" ON public.user_roles;
 CREATE POLICY "Users can read own roles"
     ON public.user_roles
     FOR SELECT
     TO authenticated
-    USING (auth.uid() = user_id OR EXISTS (
-        SELECT 1 FROM public.user_roles ur WHERE ur.user_id = auth.uid() AND ur.role = 'admin'
-    ));
+    USING (auth.uid() = user_id OR public.is_admin());
 
 -- RLS: Community Discussions
 DROP POLICY IF EXISTS "Public can view active discussions" ON public.community_discussions;
@@ -308,10 +342,7 @@ CREATE POLICY "Public can view active discussions"
     USING (
         is_hidden = false
         OR (auth.uid() IS NOT NULL AND auth.uid() = author_id)
-        OR EXISTS (
-            SELECT 1 FROM public.user_roles ur
-            WHERE ur.user_id = auth.uid() AND ur.role IN ('moderator', 'admin')
-        )
+        OR public.is_moderator_or_admin()
     );
 
 DROP POLICY IF EXISTS "Authenticated learners can create discussions" ON public.community_discussions;
@@ -328,17 +359,11 @@ CREATE POLICY "Authors can update own discussions"
     TO authenticated
     USING (
         (auth.uid() = author_id AND is_hidden = false)
-        OR EXISTS (
-            SELECT 1 FROM public.user_roles ur
-            WHERE ur.user_id = auth.uid() AND ur.role IN ('moderator', 'admin')
-        )
+        OR public.is_moderator_or_admin()
     )
     WITH CHECK (
         (auth.uid() = author_id AND is_hidden = false)
-        OR EXISTS (
-            SELECT 1 FROM public.user_roles ur
-            WHERE ur.user_id = auth.uid() AND ur.role IN ('moderator', 'admin')
-        )
+        OR public.is_moderator_or_admin()
     );
 
 DROP POLICY IF EXISTS "Authors can delete own discussions" ON public.community_discussions;
@@ -348,10 +373,7 @@ CREATE POLICY "Authors can delete own discussions"
     TO authenticated
     USING (
         auth.uid() = author_id
-        OR EXISTS (
-            SELECT 1 FROM public.user_roles ur
-            WHERE ur.user_id = auth.uid() AND ur.role IN ('moderator', 'admin')
-        )
+        OR public.is_moderator_or_admin()
     );
 
 -- RLS: Community Replies
@@ -363,10 +385,7 @@ CREATE POLICY "Public can view active replies"
     USING (
         is_hidden = false
         OR (auth.uid() IS NOT NULL AND auth.uid() = author_id)
-        OR EXISTS (
-            SELECT 1 FROM public.user_roles ur
-            WHERE ur.user_id = auth.uid() AND ur.role IN ('moderator', 'admin')
-        )
+        OR public.is_moderator_or_admin()
     );
 
 DROP POLICY IF EXISTS "Authenticated learners can create replies" ON public.community_replies;
@@ -383,17 +402,11 @@ CREATE POLICY "Authors can update own replies"
     TO authenticated
     USING (
         (auth.uid() = author_id AND is_hidden = false)
-        OR EXISTS (
-            SELECT 1 FROM public.user_roles ur
-            WHERE ur.user_id = auth.uid() AND ur.role IN ('moderator', 'admin')
-        )
+        OR public.is_moderator_or_admin()
     )
     WITH CHECK (
         (auth.uid() = author_id AND is_hidden = false)
-        OR EXISTS (
-            SELECT 1 FROM public.user_roles ur
-            WHERE ur.user_id = auth.uid() AND ur.role IN ('moderator', 'admin')
-        )
+        OR public.is_moderator_or_admin()
     );
 
 DROP POLICY IF EXISTS "Authors can delete own replies" ON public.community_replies;
@@ -403,10 +416,7 @@ CREATE POLICY "Authors can delete own replies"
     TO authenticated
     USING (
         auth.uid() = author_id
-        OR EXISTS (
-            SELECT 1 FROM public.user_roles ur
-            WHERE ur.user_id = auth.uid() AND ur.role IN ('moderator', 'admin')
-        )
+        OR public.is_moderator_or_admin()
     );
 
 -- RLS: Community Reports
@@ -417,10 +427,7 @@ CREATE POLICY "Reporters can view own reports"
     TO authenticated
     USING (
         auth.uid() = reporter_id
-        OR EXISTS (
-            SELECT 1 FROM public.user_roles ur
-            WHERE ur.user_id = auth.uid() AND ur.role IN ('moderator', 'admin')
-        )
+        OR public.is_moderator_or_admin()
     );
 
 DROP POLICY IF EXISTS "Authenticated users can submit reports" ON public.community_reports;
@@ -435,12 +442,7 @@ CREATE POLICY "Moderators can update reports"
     ON public.community_reports
     FOR UPDATE
     TO authenticated
-    USING (
-        EXISTS (
-            SELECT 1 FROM public.user_roles ur
-            WHERE ur.user_id = auth.uid() AND ur.role IN ('moderator', 'admin')
-        )
-    );
+    USING (public.is_moderator_or_admin());
 
 -- Grants
 GRANT SELECT ON public.community_discussions TO anon, authenticated;
@@ -451,4 +453,5 @@ REVOKE ALL ON public.community_reports FROM anon;
 GRANT SELECT, INSERT, UPDATE ON public.community_reports TO authenticated;
 REVOKE ALL ON public.user_roles FROM anon;
 GRANT SELECT ON public.user_roles TO authenticated;
+
 
