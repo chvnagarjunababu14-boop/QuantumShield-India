@@ -1,5 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
 import "@fontsource/lexend/latin-500.css";
 import "@fontsource/lexend/latin-600.css";
 import "@fontsource/lexend/latin-700.css";
@@ -16,8 +17,10 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
   <StrictMode>
-    <AppErrorBoundary>
-      <App />
-    </AppErrorBoundary>
+    <BrowserRouter>
+      <AppErrorBoundary>
+        <App />
+      </AppErrorBoundary>
+    </BrowserRouter>
   </StrictMode>,
 );

@@ -48,4 +48,4 @@ Glass panels use about 82% white plus a 16px blur, with a solid white fallback w
 
 ## Out of scope for the visual system
 
-Dark theme, course catalogs, chat transcripts, and dashboards are not part of Phase 1. Do not invent controls for them until those features exist.
+Dark theme, chat transcripts, and dashboards stay out. Phase 2 adds a publication-style catalogue, lesson reader, sample quiz, and a community page that describes future rooms. Do not draw fake messages or member activity.

@@ -61,8 +61,73 @@ body {
   outline-offset: 2px;
 }
 
+:focus-visible {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+
+.button-primary,
+.button-secondary {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  padding: 0 1rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 200ms ease;
+}
+
+.button-primary {
+  background: var(--color-action);
+  color: #ffffff;
+}
+
+.button-primary:hover {
+  background: var(--color-action-pressed);
+}
+
+.button-secondary {
+  border: 1px solid rgba(11, 31, 58, 0.2);
+  background: #ffffff;
+  color: var(--color-ink);
+}
+
+.button-primary:disabled,
+.button-secondary:disabled {
+  background: var(--color-disabled);
+  color: var(--color-muted);
+  cursor: not-allowed;
+}
+
+.text-link {
+  color: var(--color-action);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.field {
+  width: 100%;
+  min-height: 2.75rem;
+  border: 1px solid rgba(11, 31, 58, 0.24);
+  border-radius: 0.5rem;
+  background: #ffffff;
+  padding: 0 0.75rem;
+  color: var(--color-ink);
+  font: inherit;
+}
+
+.lesson-article h2 {
+  scroll-margin-top: 1.5rem;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .action-button,
+  .button-primary,
+  .button-secondary,
   .glass-panel {
     transition: none;
   }

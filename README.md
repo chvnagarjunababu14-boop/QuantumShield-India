@@ -2,11 +2,11 @@
 
 QuantumShield India is a public learning platform for cybersecurity, quantum computing, and other emerging technologies. People will be able to study structured lessons and discuss them with a global community.
 
-Phase 1 is the local foundation: a branded React site and a FastAPI service. The site calls `GET /api/health` and shows whether that service is reachable. Courses, quizzes, the quantum-threat simulator, accounts, bookmarks, and community chat are not built yet.
+Phase 2 adds the learning site on top of that foundation: a home page, an explore page with search and filters, six sample lessons, one sample quiz, and a community page that describes the planned discussion rooms. The site still calls `GET /api/health` and shows whether that service is reachable. Accounts, saved progress, the quantum-threat simulator, and live chat are not built yet.
 
 ## Technology
 
-- Frontend: React 19, Vite, TypeScript (strict), Tailwind CSS, Vitest, React Testing Library
+- Frontend: React 19, Vite, TypeScript (strict), Tailwind CSS, React Router, Vitest, React Testing Library
 - Backend: Python 3.12, FastAPI, Pydantic, Uvicorn, pytest
 
 Fonts are installed with the frontend packages. The app does not call a font host or any paid API.
@@ -113,4 +113,6 @@ The API reads that file from the `backend` directory when it is present, and oth
 
 - The health check only reports that the API process answered. It does not measure learning progress.
 - There is no database, authentication, or deployment configuration.
-- Planned lessons and discussion rooms are described in the product copy. They have no screens yet.
+- Lessons and the quiz are sample content in the frontend. They are not saved to an account.
+- The quantum-threat simulator is described inside one lesson and does not run.
+- The community page describes future rooms. It does not host messages.

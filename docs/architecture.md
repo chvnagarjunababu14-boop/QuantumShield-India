@@ -1,6 +1,6 @@
 # Architecture
 
-Phase 1 is a local learning-platform foundation. The browser shows the QuantumShield India brand and reports the live result of `GET /api/health`. Nothing is persisted.
+The site is a public learning catalogue plus a health check. Sample lessons, topics, paths, and the quiz live in `frontend/src/content` as typed data. `GET /api/health` still reports whether the API process is up. Accounts, progress, and chat are not stored.
 
 ## Runtime
 

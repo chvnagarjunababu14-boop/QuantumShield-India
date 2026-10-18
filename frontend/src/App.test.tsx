@@ -1,7 +1,16 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import App from "./App";
+
+function renderApp() {
+  return render(
+    <MemoryRouter>
+      <App />
+    </MemoryRouter>,
+  );
+}
 
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -16,7 +25,7 @@ describe("App", () => {
   it("explains the learning platform and starts in a loading state", () => {
     vi.stubGlobal("fetch", vi.fn().mockReturnValue(new Promise(() => undefined)));
 
-    render(<App />);
+    renderApp();
 
     expect(
       screen.getByRole("heading", {
@@ -31,7 +40,7 @@ describe("App", () => {
   it("shows the health payload returned by the service", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse(healthyPayload)));
 
-    render(<App />);
+    renderApp();
 
     expect(await screen.findByRole("definition", { name: "Status" })).toHaveTextContent("ok");
     expect(screen.getByRole("definition", { name: "Service" })).toHaveTextContent(
@@ -51,7 +60,7 @@ describe("App", () => {
       ),
     );
 
-    render(<App />);
+    renderApp();
 
     expect(await screen.findByRole("alert")).toHaveTextContent(/invalid JSON/i);
   });
@@ -64,7 +73,7 @@ describe("App", () => {
       ),
     );
 
-    render(<App />);
+    renderApp();
 
     expect(await screen.findByRole("alert")).toHaveTextContent(/starting/i);
   });
@@ -77,7 +86,7 @@ describe("App", () => {
     vi.stubGlobal("fetch", fetchMock);
     const user = userEvent.setup();
 
-    render(<App />);
+    renderApp();
 
     expect(await screen.findByRole("alert")).toHaveTextContent(/could not be reached/i);
     await user.click(screen.getByRole("button", { name: "Check again" }));
