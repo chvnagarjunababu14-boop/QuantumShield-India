@@ -90,11 +90,12 @@ describe("learning pages", () => {
     expect(screen.getByText(/FIPS 203 specifies ML-KEM/i)).toBeInTheDocument();
   });
 
-  it("describes the community without presenting messages", () => {
+  it("renders the community forum with technology topic rooms", async () => {
     renderAt("/community");
-    expect(screen.getByRole("heading", { name: "A community for the lessons you read" })).toBeInTheDocument();
-    expect(screen.getByText(/does not show messages, members, or a live conversation/i)).toBeInTheDocument();
-    expect(screen.queryByRole("log")).not.toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: /Collaborative Engineering Forum/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "All Topics" })).toBeInTheDocument();
   });
 
   it("opens the menu and offers the primary links", async () => {

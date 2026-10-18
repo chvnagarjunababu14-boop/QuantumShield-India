@@ -4,6 +4,7 @@ import { SiteHeader } from "./components/SiteHeader";
 import { AuthProvider } from "./context/AuthContext";
 import { AuthPage } from "./pages/AuthPage";
 import { CommunityPage } from "./pages/CommunityPage";
+import { DiscussionDetailPage } from "./pages/DiscussionDetailPage";
 import { ExplorePage } from "./pages/ExplorePage";
 import { HomePage } from "./pages/HomePage";
 import { LearnerPage } from "./pages/LearnerPage";
@@ -23,6 +24,7 @@ export default function App() {
           <Route path="/explore" element={<ExplorePage />} />
           <Route path="/lessons/:slug" element={<LessonPage />} />
           <Route path="/community" element={<CommunityPage />} />
+          <Route path="/community/discussions/:id" element={<DiscussionDetailPage />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/learning" element={<LearnerPage />} />
           <Route path="*" element={<NotFoundPage />} />
