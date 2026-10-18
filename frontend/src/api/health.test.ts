@@ -10,15 +10,31 @@ function jsonResponse(body: unknown, status = 200): Response {
 }
 
 describe("resolveApiBaseUrl", () => {
-  it("falls back to the local API when the value is missing or blank", () => {
-    expect(resolveApiBaseUrl(undefined)).toBe("http://127.0.0.1:8000");
-    expect(resolveApiBaseUrl("   ")).toBe("http://127.0.0.1:8000");
+  it("falls back to the local API when the value is missing or blank in development", () => {
+    expect(resolveApiBaseUrl(undefined, false)).toBe("http://127.0.0.1:8000");
+    expect(resolveApiBaseUrl("   ", false)).toBe("http://127.0.0.1:8000");
   });
 
-  it("removes a trailing slash from a configured URL", () => {
+  it("does not fall back to local development URLs in production mode", () => {
+    // In production, missing or blank configuration must return empty string (for same-origin or reverse-proxy routing)
+    // and must never silently default to loopback addresses
+    const resolvedMissing = resolveApiBaseUrl(undefined, true);
+    expect(resolvedMissing).toBe("");
+    expect(resolvedMissing).not.toBe("http://127.0.0.1:8000");
+
+    const resolvedBlank = resolveApiBaseUrl("   ", true);
+    expect(resolvedBlank).toBe("");
+    expect(resolvedBlank).not.toBe("http://127.0.0.1:8000");
+  });
+
+  it("removes a trailing slash from a configured URL in both environments", () => {
     expect(resolveApiBaseUrl("http://localhost:8000/")).toBe("http://localhost:8000");
+    expect(
+      resolveApiBaseUrl("https://api.quantumshield.in/", true),
+    ).toBe("https://api.quantumshield.in");
   });
 });
+
 
 describe("fetchHealth", () => {
   afterEach(() => {
@@ -93,6 +109,20 @@ describe("fetchHealth", () => {
 
     expect(fetchMock).toHaveBeenCalledWith(
       new URL("http://127.0.0.1:8000/api/health"),
+      expect.objectContaining({ method: "GET", cache: "no-store" }),
+    );
+  });
+
+  it("resolves against window origin when baseUrl is empty string", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      jsonResponse({ status: "ok", service: "QuantumShield India" }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await fetchHealth("");
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      new URL("api/health", window.location.origin.endsWith("/") ? window.location.origin : `${window.location.origin}/`),
       expect.objectContaining({ method: "GET", cache: "no-store" }),
     );
   });

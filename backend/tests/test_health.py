@@ -81,3 +81,21 @@ def test_security_headers_are_present() -> None:
     assert "geolocation=()" in response.headers["permissions-policy"]
     assert "no-store" in response.headers["cache-control"]
 
+
+def test_unhandled_exception_returns_clean_json_error() -> None:
+    app = create_app()
+
+    @app.get("/api/test-error")
+    def trigger_error() -> None:
+        raise RuntimeError("Sensitive internal database connection error: db://internal-host:5432")
+
+    client = TestClient(app, raise_server_exceptions=False)
+    response = client.get("/api/test-error")
+
+    assert response.status_code == 500
+    data = response.json()
+    assert data["status"] == "error"
+    assert "Sensitive internal database" not in response.text
+    assert data["message"] == "An internal server error occurred."
+
+

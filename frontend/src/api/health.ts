@@ -9,9 +9,23 @@ export class HealthCheckError extends Error {
 
 function healthEndpoint(baseUrl: string): URL {
   try {
-    const normalized = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
+    const trimmed = baseUrl.trim();
+    if (!trimmed) {
+      if (typeof window !== "undefined" && window.location?.origin) {
+        const origin = window.location.origin.endsWith("/")
+          ? window.location.origin
+          : `${window.location.origin}/`;
+        return new URL("api/health", origin);
+      }
+      throw new HealthCheckError("The API address is not a valid URL.");
+    }
+
+    const normalized = trimmed.endsWith("/") ? trimmed : `${trimmed}/`;
     return new URL("api/health", normalized);
-  } catch {
+  } catch (error: unknown) {
+    if (error instanceof HealthCheckError) {
+      throw error;
+    }
     throw new HealthCheckError("The API address is not a valid URL.");
   }
 }

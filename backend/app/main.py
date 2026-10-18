@@ -1,5 +1,6 @@
-from fastapi import FastAPI, Response
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from app.config import SERVICE_NAME, Settings, load_settings
@@ -42,6 +43,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_methods=["GET", "OPTIONS"],
         allow_headers=["Accept"],
     )
+
+    @app.exception_handler(Exception)
+    async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": "An internal server error occurred."},
+        )
 
     @app.get("/api/health", response_model=HealthResponse)
     def read_health(response: Response) -> HealthResponse:
