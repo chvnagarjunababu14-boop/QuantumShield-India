@@ -51,16 +51,31 @@ export function readingMinutes(lesson: Lesson): number {
   return Math.max(1, Math.round(words / WORDS_PER_MINUTE));
 }
 
+export function getLessonsForTopic(topicId: string): Lesson[] {
+  const topic = getTopic(topicId);
+  if (!topic) return [];
+  if (topic.lessonSlugs && topic.lessonSlugs.length > 0) {
+    return lessons.filter((lesson) => topic.lessonSlugs!.includes(lesson.slug));
+  }
+  return lessons.filter((lesson) => lesson.topicId === topicId);
+}
+
 export function filterLessons(filters: LessonFilters): FilterResult {
   const topicKnown = filters.topicId === "all" || topics.some((topic) => topic.id === filters.topicId);
   const needle = filters.query.trim().toLowerCase();
+  const selectedTopic = filters.topicId !== "all" ? getTopic(filters.topicId) : undefined;
 
   const matches = lessons.filter((lesson) => {
     if (!topicKnown) {
       return false;
     }
-    if (filters.topicId !== "all" && lesson.topicId !== filters.topicId) {
-      return false;
+    if (filters.topicId !== "all") {
+      const matchesTopic =
+        lesson.topicId === filters.topicId ||
+        (selectedTopic?.lessonSlugs?.includes(lesson.slug) ?? false);
+      if (!matchesTopic) {
+        return false;
+      }
     }
     if (filters.difficulty !== "all" && lesson.difficulty !== filters.difficulty) {
       return false;
@@ -79,8 +94,11 @@ export function featuredLessons(): Lesson[] {
 }
 
 function lessonSearchText(lesson: Lesson): string {
-  const topic = getTopic(lesson.topicId);
-  return [lesson.title, lesson.summary, topic?.title ?? "", lesson.difficulty, lessonText(lesson)]
+  const matchingTopics = topics.filter(
+    (t) => t.id === lesson.topicId || (t.lessonSlugs?.includes(lesson.slug) ?? false),
+  );
+  const topicTitles = matchingTopics.map((t) => t.title).join(" ");
+  return [lesson.title, lesson.summary, topicTitles, lesson.difficulty, lessonText(lesson)]
     .join(" ")
     .toLowerCase();
 }

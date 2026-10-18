@@ -30,6 +30,11 @@ export type Topic = {
   id: string;
   title: string;
   summary: string;
+  description?: string;
+  keyConcepts?: string[];
+  illustrationSrc?: string;
+  illustrationAlt?: string;
+  lessonSlugs?: string[];
 };
 
 export type Lesson = {

@@ -1,7 +1,26 @@
 import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
+
+vi.mock("./api/insforge", () => ({
+  isInsForgeConfigured: vi.fn(() => true),
+  getInsForgeClient: vi.fn(() => ({
+    auth: {
+      getCurrentUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
+      onAuthStateChange: vi.fn(() => () => {}),
+      signOut: vi.fn().mockResolvedValue({ error: null }),
+    },
+    database: {
+      from: vi.fn(() => ({
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        order: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({ data: null, error: null }),
+      })),
+    },
+  })),
+}));
+
 import App from "./App";
 
 function renderApp() {
@@ -12,86 +31,70 @@ function renderApp() {
   );
 }
 
-function jsonResponse(body: unknown, status = 200): Response {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { "Content-Type": "application/json" },
-  });
-}
-
-const healthyPayload = { status: "ok", service: "QuantumShield India" };
-
 describe("App", () => {
-  it("explains the learning platform and starts in a loading state", () => {
-    vi.stubGlobal("fetch", vi.fn().mockReturnValue(new Promise(() => undefined)));
-
+  it("renders the homepage introducing the platform without the service connection card", () => {
     renderApp();
 
     expect(
       screen.getByRole("heading", {
-        name: "Learn cybersecurity and emerging technology together.",
+        name: "Prepare for a world beyond today’s encryption.",
       }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/public place to study cybersecurity/i)).toBeInTheDocument();
-    expect(screen.getByRole("status")).toHaveTextContent(/checking whether the learning service/i);
-    expect(screen.getByRole("button", { name: "Check again" })).toBeDisabled();
-  });
-
-  it("shows the health payload returned by the service", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse(healthyPayload)));
-
-    renderApp();
-
-    expect(await screen.findByRole("definition", { name: "Status" })).toHaveTextContent("ok");
-    expect(screen.getByRole("definition", { name: "Service" })).toHaveTextContent(
-      "QuantumShield India",
-    );
-    expect(screen.getByRole("status")).toHaveTextContent(/connected/i);
-  });
-
-  it("shows an alert when the payload is malformed", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue(
-        new Response("not-json", {
-          status: 200,
-          headers: { "Content-Type": "text/plain" },
-        }),
+    expect(
+      screen.getByText(
+        /understand quantum computing, cybersecurity and post-quantum cryptography/i,
       ),
-    );
-
-    renderApp();
-
-    expect(await screen.findByRole("alert")).toHaveTextContent(/invalid JSON/i);
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /service connection/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Check again" })).not.toBeInTheDocument();
+    expect(screen.queryByText("Connected")).not.toBeInTheDocument();
   });
 
-  it("shows an alert when the reported status is not ok", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue(
-        jsonResponse({ status: "starting", service: "QuantumShield India" }),
-      ),
+  it("routes /dashboard cleanly to the learner dashboard", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockReturnValue(new Promise(() => undefined)));
+    render(
+      <MemoryRouter initialEntries={["/dashboard"]}>
+        <App />
+      </MemoryRouter>,
     );
 
-    renderApp();
-
-    expect(await screen.findByRole("alert")).toHaveTextContent(/starting/i);
+    expect(
+      await screen.findByRole("heading", { name: /Sign in to access your learning dashboard/i }),
+    ).toBeInTheDocument();
   });
 
-  it("retries a failed check and then shows the live payload", async () => {
-    const fetchMock = vi
-      .fn()
-      .mockRejectedValueOnce(new TypeError("Failed to fetch"))
-      .mockResolvedValueOnce(jsonResponse(healthyPayload));
-    vi.stubGlobal("fetch", fetchMock);
-    const user = userEvent.setup();
+  it("routes /simulator to the dedicated Quantum Cryptography Simulator page", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockReturnValue(new Promise(() => undefined)));
+    render(
+      <MemoryRouter initialEntries={["/simulator"]}>
+        <App />
+      </MemoryRouter>,
+    );
 
-    renderApp();
+    expect(
+      screen.getByRole("heading", {
+        name: "Quantum Cryptography Simulator",
+        level: 1,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        name: "Laboratory Experiment Controls",
+      }),
+    ).toBeInTheDocument();
+  });
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(/could not be reached/i);
-    await user.click(screen.getByRole("button", { name: "Check again" }));
+  it("routes /awareness to explore page", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockReturnValue(new Promise(() => undefined)));
+    render(
+      <MemoryRouter initialEntries={["/awareness"]}>
+        <App />
+      </MemoryRouter>,
+    );
 
-    expect(await screen.findByRole("definition", { name: "Status" })).toHaveTextContent("ok");
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(
+      await screen.findByRole("heading", { name: "Explore lessons" }),
+    ).toBeInTheDocument();
   });
 });
+

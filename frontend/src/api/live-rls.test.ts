@@ -1,13 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { createClient } from "@insforge/sdk";
-
-const LIVE_INSFORGE_BASE_URL = "https://qmy8ne8b.us-east.insforge.app";
-const LIVE_INSFORGE_ANON_KEY = "anon_75603278890b03afe43bbd7cd24a660184c945f173ae224fc703efda9ac2514e";
+import { getInsForgeConfig } from "./insforge";
 
 describe("Live InsForge Row-Level Security (RLS) & Access Controls", () => {
+  const config = getInsForgeConfig() || {
+    baseUrl: "https://qmy8ne8b.us-east.insforge.app",
+    anonKey: "",
+  };
+
   const client = createClient({
-    baseUrl: LIVE_INSFORGE_BASE_URL,
-    anonKey: LIVE_INSFORGE_ANON_KEY,
+    baseUrl: config.baseUrl,
+    anonKey: config.anonKey,
   });
 
   it("denies anonymous access to private learner profiles", async () => {

@@ -138,3 +138,10 @@ CREATE POLICY "Moderators can update reports"
     FOR UPDATE
     TO authenticated
     USING (public.is_moderator_or_admin());
+
+-- 6. Enforce strictly read-only table grants for anonymous role on community tables
+REVOKE INSERT, UPDATE, DELETE ON public.community_discussions FROM anon;
+REVOKE INSERT, UPDATE, DELETE ON public.community_replies FROM anon;
+GRANT SELECT ON public.community_discussions TO anon, authenticated;
+GRANT SELECT ON public.community_replies TO anon, authenticated;
+

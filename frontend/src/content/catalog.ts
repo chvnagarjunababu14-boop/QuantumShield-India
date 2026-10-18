@@ -3,28 +3,105 @@ import type { LearningPath, Lesson, Topic } from "./types";
 export const topics: Topic[] = [
   {
     id: "cybersecurity",
-    title: "Cybersecurity",
-    summary: "How people protect systems and data, and why no single control is enough.",
+    title: "Cybersecurity Fundamentals",
+    summary: "Core defensive principles: confidentiality, data integrity, service availability, and reducing account blast radius.",
+    description:
+      "Cybersecurity is the discipline of protecting digital systems, networks, and confidential information from unauthorized access, modification, or disruption. Foundational concepts—including the CIA Triad, threat versus vulnerability analysis, and least-privilege access control—form the bedrock upon which all advanced cryptographic and network defenses are built.",
+    keyConcepts: [
+      "The CIA Triad: Confidentiality, Integrity, and Availability trade-offs",
+      "Risk Taxonomy: Vulnerability vs. Threat vs. Active Incident",
+      "Principle of Least Privilege and blast radius containment",
+      "Proactive patch management and credential hygiene habits",
+    ],
+    illustrationSrc: "/images/lessons/01-cybersecurity-fundamentals.webp",
+    illustrationAlt:
+      "Cybersecurity fundamentals illustration showing confidential data protection, integrity verification, and network availability defenses",
+    lessonSlugs: ["cybersecurity-fundamentals"],
   },
   {
     id: "quantum-computing",
-    title: "Quantum computing",
-    summary: "What qubits add to computing, and which claims are still open engineering problems.",
+    title: "Quantum Computing",
+    summary: "How qubits, superposition, and entanglement transform computing, and where NISQ hardware engineering stands.",
+    description:
+      "Quantum computers harness quantum mechanics to solve specialized computational problems beyond the reach of classical supercomputers. Unlike classical bits that hold binary 0 or 1 states, qubits maintain probability amplitudes described by superposition until measurement collapses them. Today's hardware remains in the Noisy Intermediate-Scale Quantum (NISQ) era, where fault-tolerant logical qubits remain an active engineering frontier.",
+    keyConcepts: [
+      "Classical binary bits vs. probabilistic quantum qubits",
+      "Superposition amplitudes and irreversible measurement collapse",
+      "Entanglement correlations without superluminal signalling",
+      "NISQ processor limits and fault-tolerant error correction challenges",
+    ],
+    illustrationSrc: "/images/lessons/02-quantum-computing-fundamentals.webp",
+    illustrationAlt:
+      "Quantum computing visual comparing discrete classical binary 0 and 1 bits against continuous quantum superposition states",
+    lessonSlugs: ["quantum-computing-fundamentals"],
   },
   {
     id: "cryptography",
-    title: "Cryptography",
-    summary: "How public-key encryption relates to quantum algorithms and newer standards.",
+    title: "Cryptography and Quantum Threats",
+    summary: "Why Shor's algorithm targets public-key math, Grover's algorithm affects symmetric ciphers, and HNDL creates urgent exposure.",
+    description:
+      "Modern internet security relies on mathematical problems—such as prime factorization and discrete logarithms—underlying RSA, Diffie-Hellman, and Elliptic Curve Cryptography. A sufficiently large fault-tolerant quantum computer running Shor's algorithm would solve these problems in polynomial time. Adversaries are already executing 'Harvest Now, Decrypt Later' (HNDL) operations, intercepting encrypted traffic today to decrypt once quantum hardware matures.",
+    keyConcepts: [
+      "Shor's algorithm: polynomial factoring breaking RSA and ECC",
+      "Grover's algorithm: quadratic speedup against symmetric keys",
+      "Harvest Now, Decrypt Later (HNDL) retroactive exposure timeline",
+      "Asymmetric vulnerability vs. symmetric resilience (AES-256)",
+    ],
+    illustrationSrc: "/images/lessons/03-quantum-cryptography.webp",
+    illustrationAlt:
+      "Cryptographic impact visual depicting Shor's algorithm targeting public-key math and Grover's algorithm affecting symmetric ciphers",
+    lessonSlugs: ["quantum-computing-and-cryptography", "post-quantum-cryptography"],
+  },
+  {
+    id: "post-quantum-cryptography",
+    title: "Post-Quantum Cryptography",
+    summary: "NIST standards (ML-KEM, ML-DSA, SLH-DSA), lattice-based security, and cryptographic migration engineering.",
+    description:
+      "Post-quantum cryptography (PQC) consists of mathematical algorithms engineered to run efficiently on standard classical servers and devices while resisting cryptanalytic attacks from both classical and quantum computers. Standardized by NIST in 2024 under FIPS 203, 204, and 205, modern security teams must plan cryptographic discovery, hybrid key exchanges, and infrastructure migration roadmaps.",
+    keyConcepts: [
+      "NIST FIPS 203: Module-Lattice-Based Key-Encapsulation (ML-KEM)",
+      "NIST FIPS 204: Module-Lattice Digital Signatures (ML-DSA)",
+      "NIST FIPS 205: Stateless Hash-Based Digital Signatures (SLH-DSA)",
+      "Cryptographic agility, hybrid deployments, and migration roadmaps",
+    ],
+    illustrationSrc: "/images/lessons/04-post-quantum-cryptography.webp",
+    illustrationAlt:
+      "Post-quantum cryptography visual showing lattice-based and hash-based quantum-resistant algorithms standardized by NIST",
+    lessonSlugs: ["post-quantum-cryptography"],
   },
   {
     id: "artificial-intelligence",
-    title: "Artificial intelligence",
-    summary: "What machine-learning models do with data, and where their limits matter.",
+    title: "AI and Machine Learning Security",
+    summary: "How models learn from statistical distributions, model inversion risks, prompt injection, and treating outputs as untrusted.",
+    description:
+      "Machine learning models adjust high-dimensional weights against training data to perform statistical pattern recognition at massive scale. While defensive teams use AI models to triage alerts and anomaly-check security logs, neural networks can hallucinate, suffer prompt injection, and fall victim to training data poisoning. Security engineering dictates that all AI outputs must be treated as untrusted input.",
+    keyConcepts: [
+      "Statistical pattern matching vs. authentic logical reasoning",
+      "Treating AI model outputs as untrusted execution input",
+      "Adversarial evasion, prompt injection, and data poisoning",
+      "AI-augmented phishing lures and out-of-band verification",
+    ],
+    illustrationSrc: "/images/lessons/05-ai-and-machine-learning.webp",
+    illustrationAlt:
+      "Artificial intelligence visual illustrating neural network training data flows, inference processing, and security verification boundaries",
+    lessonSlugs: ["artificial-intelligence"],
   },
   {
     id: "cloud-and-iot",
-    title: "Cloud and IoT",
-    summary: "How responsibility is split in the cloud, and why small devices are hard to keep updated.",
+    title: "Cloud and IoT Security",
+    summary: "The Shared Responsibility Model across cloud services, edge device constraints, and network segmentation.",
+    description:
+      "Enterprise digital operations span multi-tenant public clouds and thousands of physical edge IoT devices. Under the Shared Responsibility Model, cloud providers secure the hypervisor and data center facilities, while organizations remain responsible for data classification, bucket policies, and IAM roles. Meanwhile, embedded IoT endpoints often ship with unchangeable or default credentials, requiring strict network segmentation and VLAN isolation.",
+    keyConcepts: [
+      "The Shared Responsibility Model: Provider platform vs. Customer data & IAM",
+      "Securing cloud object storage and eliminating public bucket misconfigurations",
+      "Embedded IoT firmware vulnerabilities and factory-default credential risks",
+      "VLAN network segmentation and perimeter defense for operational devices",
+    ],
+    illustrationSrc: "/images/lessons/06-cloud-and-iot-security.webp",
+    illustrationAlt:
+      "Cloud and IoT security visual illustrating the boundary between cloud provider infrastructure and customer identity and device configuration",
+    lessonSlugs: ["cloud-and-iot-security"],
   },
 ];
 
@@ -79,6 +156,47 @@ export const lessons: Lesson[] = [
         type: "paragraph",
         text: "These habits reduce common failures. They are not a complete security program, and this sample lesson is not a certification.",
       },
+      {
+        type: "quiz",
+        questions: [
+          {
+            id: "cia-integrity-alter",
+            prompt: "Which pillar of the CIA triad is violated if an attacker secretly alters recipient account numbers on payroll transfers?",
+            choices: [
+              { id: "integrity", label: "Integrity" },
+              { id: "confidentiality", label: "Confidentiality" },
+              { id: "availability", label: "Availability" },
+            ],
+            correctChoiceId: "integrity",
+            explanation:
+              "Integrity ensures information has not been modified or corrupted without authorization. Tampering with account numbers alters data accuracy.",
+          },
+          {
+            id: "threat-vs-vuln",
+            prompt: "What is the key difference between a vulnerability and an incident?",
+            choices: [
+              { id: "dormant", label: "A vulnerability is a dormant weakness; an incident occurs when a threat exploits it to cause harm" },
+              { id: "downtime", label: "A vulnerability always causes immediate service downtime" },
+              { id: "theft", label: "An incident only refers to physical server theft" },
+            ],
+            correctChoiceId: "dormant",
+            explanation:
+              "A vulnerability is a flaw (like missing software patches). It becomes an active incident only when an actor or event takes advantage of it.",
+          },
+          {
+            id: "least-privilege",
+            prompt: "Why is granting full administrator access to every employee considered a critical security mistake?",
+            choices: [
+              { id: "privilege", label: "It violates least privilege, expanding the blast radius of any single compromised account" },
+              { id: "passwords", label: "It makes user passwords expire every day" },
+              { id: "speed", label: "It slows down internet connection bandwidth" },
+            ],
+            correctChoiceId: "privilege",
+            explanation:
+              "Broad administrative permissions mean a single mistake or compromised credential gives attackers wide access across the entire organization.",
+          },
+        ],
+      },
     ],
   },
   {
@@ -119,6 +237,47 @@ export const lessons: Lesson[] = [
       {
         type: "paragraph",
         text: "Today's quantum processors are noisy and limited in size. A fault-tolerant machine large enough to run the cryptographic algorithms discussed in later lessons is an open engineering problem. This lesson does not predict the year that machine will exist.",
+      },
+      {
+        type: "quiz",
+        questions: [
+          {
+            id: "qubit-measurement-collapse",
+            prompt: "What happens when a quantum device measures a qubit that was in a superposition state?",
+            choices: [
+              { id: "collapse", label: "The superposition collapses into a single definite classical outcome (0 or 1)" },
+              { id: "both", label: "The device reads and stores both 0 and 1 simultaneously" },
+              { id: "faster-light", label: "The qubit transmits its state faster than the speed of light" },
+            ],
+            correctChoiceId: "collapse",
+            explanation:
+              "Physical measurement irreversibly collapses probability amplitudes into a single classical outcome. You never extract two readable states simultaneously from one qubit.",
+          },
+          {
+            id: "superposition-meaning",
+            prompt: "Which statement accurately describes quantum superposition?",
+            choices: [
+              { id: "amplitudes", label: "It is a mathematical description of probability amplitudes for outcomes before measurement occurs" },
+              { id: "storage", label: "It is a method for storing twice as much text on a standard hard drive" },
+              { id: "speedup", label: "It makes everyday word processors run twice as fast" },
+            ],
+            correctChoiceId: "amplitudes",
+            explanation:
+              "Superposition describes pre-measurement probability amplitudes. It is not a mechanism for doubling file storage or speeding up ordinary sequential tasks.",
+          },
+          {
+            id: "nisq-limits",
+            prompt: "Why are today's noisy intermediate-scale quantum (NISQ) processors not yet breaking public-key encryption?",
+            choices: [
+              { id: "noisy", label: "They are limited in qubit count and prone to environmental noise, lacking full fault tolerance" },
+              { id: "software", label: "Software engineers have not yet invented the binary number 0" },
+              { id: "power", label: "They can only be turned on during solar eclipses" },
+            ],
+            correctChoiceId: "noisy",
+            explanation:
+              "Running Shor's algorithm against current RSA or ECC key sizes requires thousands of fault-tolerant logical qubits, which is an active engineering frontier.",
+          },
+        ],
       },
     ],
   },
@@ -164,6 +323,47 @@ export const lessons: Lesson[] = [
         type: "callout",
         title: "This page does not run an attack",
         text: "Nothing here factors a key, contacts a server, or tests a password. The point is to separate what the mathematics allows from what current machines can do.",
+      },
+      {
+        type: "quiz",
+        questions: [
+          {
+            id: "shor-vs-grover",
+            prompt: "What is the primary difference in impact between Shor's algorithm and Grover's algorithm?",
+            choices: [
+              { id: "impact-diff", label: "Shor's algorithm breaks public-key factoring/ECC, while Grover's algorithm provides a quadratic search speedup against symmetric keys" },
+              { id: "both-break", label: "Both algorithms break AES-256 completely in less than a second" },
+              { id: "no-effect", label: "Neither algorithm has any mathematical relevance to modern cryptography" },
+            ],
+            correctChoiceId: "impact-diff",
+            explanation:
+              "Shor's algorithm solves period-finding, breaking factoring and discrete logs. Grover's algorithm speeds up unstructured search, effectively halving symmetric key lengths without breaking them structurally.",
+          },
+          {
+            id: "aes-key-length",
+            prompt: "Under Grover's quantum search algorithm, why is AES-256 considered practically secure?",
+            choices: [
+              { id: "128-bits", label: "Grover's algorithm reduces effective key security to ~128 bits, which remains infeasible to brute force" },
+              { id: "immutable", label: "Grover's algorithm is mathematically forbidden from running on AES" },
+              { id: "instant", label: "AES-256 keys change automatically every millisecond" },
+            ],
+            correctChoiceId: "128-bits",
+            explanation:
+              "Grover's algorithm provides a quadratic speedup ($O(\\sqrt{N})$), effectively cutting 256 bits down to 128 bits of security. 128 bits of symmetric security is still mathematically secure.",
+          },
+          {
+            id: "hndl-definition",
+            prompt: "What is the primary risk addressed by 'Harvest Now, Decrypt Later' (HNDL)?",
+            choices: [
+              { id: "retroactive", label: "Adversaries intercepting and storing encrypted traffic today to decrypt once quantum computers mature" },
+              { id: "hardware-theft", label: "Thieves physically taking servers from server rooms" },
+              { id: "antivirus", label: "Antivirus software slowing down laptop boot times" },
+            ],
+            correctChoiceId: "retroactive",
+            explanation:
+              "HNDL poses a direct threat to data with long-term confidentiality requirements (medical records, sovereign data) that may still be confidential when fault-tolerant quantum computers arrive.",
+          },
+        ],
       },
     ],
   },
@@ -286,6 +486,47 @@ export const lessons: Lesson[] = [
         title: "Treat model output as untrusted",
         text: "Use it as a draft or a hint. Confirm important facts, permissions, and actions before relying on them.",
       },
+      {
+        type: "quiz",
+        questions: [
+          {
+            id: "ai-untrusted-input",
+            prompt: "When integrating a machine learning model into automated systems, how should its output be handled?",
+            choices: [
+              { id: "untrusted", label: "As untrusted input that requires strict schema validation before execution" },
+              { id: "admin", label: "As an administrative command that should bypass normal system firewalls" },
+              { id: "verified", label: "As mathematically verified truth that needs no human oversight" },
+            ],
+            correctChoiceId: "untrusted",
+            explanation:
+              "Model outputs can be manipulated via prompt injection or hallucinations. Feeding raw outputs into databases or shell commands creates severe vulnerabilities.",
+          },
+          {
+            id: "pattern-matching-limit",
+            prompt: "What does a machine learning language model fundamentally do when generating text?",
+            choices: [
+              { id: "pattern", label: "Performs statistical pattern matching based on training examples" },
+              { id: "reasoning", label: "Engages in conscious logical reasoning with innate understanding of truth" },
+              { id: "database", label: "Searches an indexed physical filing cabinet of paper documents" },
+            ],
+            correctChoiceId: "pattern",
+            explanation:
+              "Machine learning models adjust weights to mirror statistical relationships in training data. Fluent phrasing is not evidence of factual accuracy.",
+          },
+          {
+            id: "ai-phishing-defense",
+            prompt: "How does generative AI change the nature of phishing, and what is the best defense?",
+            choices: [
+              { id: "verify-channel", label: "Attackers can write more articulate messages; defenders must verify high-risk requests out-of-band" },
+              { id: "ignore", label: "AI makes phishing impossible because email filters detect all text automatically" },
+              { id: "no-passwords", label: "AI prevents employees from opening suspicious links" },
+            ],
+            correctChoiceId: "verify-channel",
+            explanation:
+              "AI writing tools eliminate spelling and grammar errors common in past phishing lures. Independent verification of unusual or sensitive requests is essential.",
+          },
+        ],
+      },
     ],
   },
   {
@@ -321,6 +562,47 @@ export const lessons: Lesson[] = [
         type: "callout",
         title: "Change the password that came in the box",
         text: "If a manual publishes the default login, anyone who can reach the device can try it. Replacement credentials should be unique to that device.",
+      },
+      {
+        type: "quiz",
+        questions: [
+          {
+            id: "shared-responsibility-data",
+            prompt: "Under the cloud Shared Responsibility Model, who is responsible for configuring access policies and protecting data stored in a cloud bucket?",
+            choices: [
+              { id: "customer", label: "The customer" },
+              { id: "provider", label: "The cloud platform provider" },
+              { id: "isp", label: "The regional internet service provider" },
+            ],
+            correctChoiceId: "customer",
+            explanation:
+              "The cloud provider secures the physical hardware and hypervisors; the customer is responsible for configuring access rules, IAM permissions, and encrypting their data.",
+          },
+          {
+            id: "iot-default-passwords",
+            prompt: "Why are factory default credentials on IoT devices a major vulnerability?",
+            choices: [
+              { id: "indexed", label: "Default credentials are widely published and targeted by automated network scanners" },
+              { id: "short", label: "Default passwords make the device hardware overheat" },
+              { id: "wifi", label: "Default passwords disconnect the device from local Wi-Fi automatically" },
+            ],
+            correctChoiceId: "indexed",
+            explanation:
+              "Attackers use automated bots to scan IP addresses and attempt published default passwords across thousands of cameras and sensors simultaneously.",
+          },
+          {
+            id: "iot-segmentation",
+            prompt: "What is an effective defensive practice for deploying IoT devices on an enterprise network?",
+            choices: [
+              { id: "isolate-vlan", label: "Isolate IoT devices on a dedicated, firewalled VLAN with restricted egress" },
+              { id: "bridge", label: "Connect all IoT devices directly to the domain controller network without a firewall" },
+              { id: "disable-passwords", label: "Disable passwords entirely so cameras reboot faster" },
+            ],
+            correctChoiceId: "isolate-vlan",
+            explanation:
+              "Network segmentation prevents an infected or compromised edge device from becoming an easy pivot point into sensitive corporate subnets.",
+          },
+        ],
       },
     ],
   },

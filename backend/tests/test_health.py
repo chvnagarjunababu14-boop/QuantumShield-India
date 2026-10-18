@@ -69,3 +69,15 @@ def test_load_settings_reads_cors_origins(monkeypatch: pytest.MonkeyPatch) -> No
     settings = load_settings()
 
     assert settings.allowed_origins == ["http://localhost:5173"]
+
+
+def test_security_headers_are_present() -> None:
+    response = _client().get("/api/health")
+
+    assert response.status_code == 200
+    assert response.headers["x-content-type-options"] == "nosniff"
+    assert response.headers["x-frame-options"] == "DENY"
+    assert response.headers["referrer-policy"] == "strict-origin-when-cross-origin"
+    assert "geolocation=()" in response.headers["permissions-policy"]
+    assert "no-store" in response.headers["cache-control"]
+
