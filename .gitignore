@@ -1,27 +1,30 @@
-# Python
-__pycache__/
-*.py[cod]
+# Dependencies and virtual environments
+node_modules/
 .venv/
 venv/
-.pytest_cache/
-.mypy_cache/
-*.egg-info/
-
-# Node
-node_modules/
-dist/
-*.tsbuildinfo
+env/
 
 # Local environment files
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
+!**/.env.example
 
-# OS and editors
+# Builds, test output, and caches
+dist/
+dist-ssr/
+.vite/
+coverage/
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+__pycache__/
+*.py[cod]
+*.tsbuildinfo
+.cache/
+
+# OS and editor clutter
 .DS_Store
 Thumbs.db
-.idea/
-.vscode/
-
-# Logs
 *.log

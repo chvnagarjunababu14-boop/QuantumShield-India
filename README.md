@@ -1,38 +1,24 @@
 # QuantumShield India
 
-QuantumShield India is an educational platform for understanding quantum-related cryptographic risk and preparing for post-quantum cryptography (PQC) migration.
+QuantumShield India is a public learning platform for cybersecurity, quantum computing, and other emerging technologies. People will be able to study structured lessons and discuss them with a global community.
 
-Phase 1 is the local foundation: a React dashboard that checks a FastAPI health endpoint. It does not analyze cryptographic assets, score readiness, or run quantum simulations.
+Phase 1 is the local foundation: a branded React site and a FastAPI service. The site calls `GET /api/health` and shows whether that service is reachable. Courses, quizzes, the quantum-threat simulator, accounts, bookmarks, and community chat are not built yet.
 
-This project is not a government service, not an official certification, and it does not guarantee quantum safety.
+## Technology
 
-## Current implementation status
+- Frontend: React 19, Vite, TypeScript (strict), Tailwind CSS, Vitest, React Testing Library
+- Backend: Python 3.12, FastAPI, Pydantic, Uvicorn, pytest
 
-Implemented in Phase 1:
-
-- Dark, responsive landing page with branding, navigation, a platform overview, and a footer.
-- Planned-capability cards for Cryptographic Inventory, Quantum Threat Simulator, PQC Readiness Assessment, and Cybersecurity Awareness. These are previews only.
-- `GET /api/health` and `GET /` on the API.
-- A live connection panel with loading, connected, and disconnected states, plus a Retry control.
-- Backend tests (pytest) and frontend tests (Vitest).
-
-Not implemented yet: inventory upload, asset classification, risk scoring, databases, reports, accounts, threat simulation, PQC algorithms, quizzes, and external integrations.
-
-## Technology stack
-
-- Frontend: React, Vite, TypeScript, Tailwind CSS, Lucide React, Vitest, React Testing Library
-- Backend: Python 3.12, FastAPI, Pydantic, Uvicorn, pytest, HTTPX2 (used by FastAPI's TestClient)
-
-The landing page is one screen with in-page navigation, so React Router is not included.
+Fonts are installed with the frontend packages. The app does not call a font host or any paid API.
 
 ## Prerequisites
 
-- Windows with PowerShell
-- Node.js 20 or newer (this project was developed with Node.js 24)
-- Python 3.12 or newer
+- Windows PowerShell
+- Node.js 24 (developed with Node.js 24.19)
+- Python 3.12
 - Git
 
-If PowerShell blocks `npm.ps1`, use `npm.cmd`. Do not change the execution policy to work around that. The same applies to virtual-environment activation scripts: call `backend\.venv\Scripts\python.exe` directly.
+If PowerShell blocks `npm.ps1`, run `npm.cmd` instead. Do not change the execution policy. Call the virtual environment with `backend\.venv\Scripts\python.exe` rather than its activation script.
 
 ## Setup
 
@@ -42,102 +28,89 @@ From the repository root:
 cd C:\Users\chvna\OneDrive\Desktop\Projects\QuantaIndia
 ```
 
-### Backend
+Backend:
 
 ```powershell
 py -3.12 -m venv backend\.venv
 backend\.venv\Scripts\python.exe -m pip install -r backend\requirements.txt
 ```
 
-### Frontend
+Frontend:
 
 ```powershell
 cd frontend
 npm.cmd install
 ```
 
-## Run the backend
-
-From the `backend` directory:
+## Run the API
 
 ```powershell
 cd C:\Users\chvna\OneDrive\Desktop\Projects\QuantaIndia\backend
 .\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-- Service information: http://127.0.0.1:8000/
-- Health check: http://127.0.0.1:8000/api/health
-- Interactive API docs: http://127.0.0.1:8000/docs
+Health check: http://127.0.0.1:8000/api/health
+
+Interactive docs: http://127.0.0.1:8000/docs
 
 Stop the process with Ctrl+C.
 
-## Run the frontend
+## Run the site
 
-In a second terminal, from the `frontend` directory:
+In a second terminal:
 
 ```powershell
 cd C:\Users\chvna\OneDrive\Desktop\Projects\QuantaIndia\frontend
 npm.cmd run dev
 ```
 
-Open http://127.0.0.1:5173 . The dashboard calls the API on port 8000. Start the backend first if you want the status panel to show Connected.
+Open http://127.0.0.1:5173. Start the API first if the connection panel should show Connected.
 
-## Tests
+## Tests and production build
 
-Backend, from the `backend` directory:
+Backend, from `backend`:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest
 ```
 
-Frontend, from the `frontend` directory:
+Frontend, from `frontend`:
 
 ```powershell
 npm.cmd test
-```
-
-Frontend tests mock `fetch`. They do not need the API process or a network connection.
-
-## Production frontend build
-
-From the `frontend` directory:
-
-```powershell
+npm.cmd run typecheck
 npm.cmd run build
 ```
 
-The compiled files are written to `frontend/dist`. Preview them locally with:
+Frontend tests stub `fetch`. They do not need the API process.
 
-```powershell
-npm.cmd run preview
-```
+## Configuration
 
-## Environment variables
+Copy the examples when you want to override a default. Do not commit `.env` files.
 
-Copy the examples if you want to override the defaults. Do not commit `.env` files.
-
-Frontend (`frontend/.env`, copied from `frontend/.env.example`):
+`frontend/.env` (from `frontend/.env.example`):
 
 ```text
 VITE_API_BASE_URL=http://127.0.0.1:8000
 ```
 
-Vite only exposes variables that start with `VITE_`. Restart `npm.cmd run dev` after changing this value. If the variable is omitted, the app uses `http://127.0.0.1:8000`.
+Vite only exposes variables that start with `VITE_`. Restart the dev server after changing this value. If it is omitted, the site uses `http://127.0.0.1:8000`.
 
-Backend (process environment, documented in `backend/.env.example`):
+`backend/.env` (from `backend/.env.example`):
 
-```powershell
-$env:CORS_ORIGINS = "http://localhost:5173,http://127.0.0.1:5173"
+```text
+CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
 ```
 
-`CORS_ORIGINS` is a comma-separated list of allowed browser origins. The default already allows the Vite dev server. The API does not load a `.env` file by itself.
+The API reads that file from the `backend` directory when it is present, and otherwise uses the same default. `CORS_ORIGINS` is a comma-separated list. A wildcard origin is rejected. No secrets are used in Phase 1.
 
-No API keys or other secrets are used in Phase 1.
+## Further reading
 
-## Known limitations
+- `docs/architecture.md` — current boundary, and the database and chat design proposed for later phases
+- `design-system/quantumshield-india/MASTER.md` — visual tokens
 
-- The health check only reports that the API process can answer. It does not measure cryptographic readiness.
-- Planned feature cards do not open tools. Those tools are not built yet.
-- There is no persistence, authentication, or deployment configuration.
-- Display fonts are requested from Google Fonts and fall back to Segoe UI when that request is unavailable.
-- The API keeps its state in memory only for the life of the process, and Phase 1 stores no application data.
+## Known limits
+
+- The health check only reports that the API process answered. It does not measure learning progress.
+- There is no database, authentication, or deployment configuration.
+- Planned lessons and discussion rooms are described in the product copy. They have no screens yet.

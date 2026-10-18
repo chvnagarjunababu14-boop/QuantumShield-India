@@ -2,40 +2,68 @@
 
 @theme {
   --font-sans: "Source Sans 3", "Segoe UI", sans-serif;
-  --font-display: "Outfit", "Segoe UI", sans-serif;
-  --color-navy-950: #070d18;
-  --color-navy-900: #0c1526;
-  --color-navy-850: #101b30;
-  --color-navy-800: #16233c;
-  --color-navy-700: #1d2d4d;
-  --color-line: #2c4066;
-  --color-mist: #e4edf8;
-  --color-muted: #9aadc8;
-  --color-cyan-accent: #7ee7f5;
-  --color-blue-accent: #8eb4ff;
-  --color-violet-accent: #c4b8ff;
+  --font-heading: "Lexend", "Source Sans 3", "Segoe UI", sans-serif;
+  --color-canvas: #d7ebfa;
+  --color-ink: #0b1f3a;
+  --color-muted: #334155;
+  --color-action: #1d4ed8;
+  --color-action-pressed: #1e3a8a;
+  --color-surface: #ffffff;
+  --color-ok: #0f766e;
+  --color-danger: #b91c1c;
+  --color-ring: #1d4ed8;
+  --color-disabled: #e2e8f0;
 }
 
-html {
-  scroll-behavior: smooth;
+:root {
+  color-scheme: light;
+  --icon-sm: 20px;
+  --icon-md: 24px;
 }
 
 body {
   margin: 0;
-  min-height: 100vh;
-  background:
-    radial-gradient(1000px 420px at 90% -10%, rgb(110 150 220 / 0.14), transparent 55%),
-    radial-gradient(720px 360px at -10% 10%, rgb(90 215 234 / 0.06), transparent 50%),
-    var(--color-navy-950);
-  color: var(--color-mist);
+  min-height: 100dvh;
+  background: var(--color-canvas);
+  color: var(--color-ink);
   font-family: var(--font-sans);
 }
 
-:focus-visible {
-  outline: 2px solid var(--color-cyan-accent);
-  outline-offset: 3px;
+.glass-panel {
+  background: #ffffff;
+  border: 1px solid rgba(11, 31, 58, 0.14);
+  box-shadow: 0 18px 40px rgba(11, 31, 58, 0.08);
 }
 
-section[id] {
-  scroll-margin-top: 5.5rem;
+@supports (backdrop-filter: blur(16px)) {
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(16px);
+  }
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: 1rem;
+  z-index: 10;
+  transform: translateY(-150%);
+  border-radius: 0.5rem;
+  background: #ffffff;
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.skip-link:focus {
+  transform: none;
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .action-button,
+  .glass-panel {
+    transition: none;
+  }
 }

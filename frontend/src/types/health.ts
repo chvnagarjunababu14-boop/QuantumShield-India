@@ -1,9 +1,9 @@
-export interface HealthResponse {
-  status: "ok";
+export type HealthResponse = {
+  status: string;
   service: string;
-}
+};
 
 export type HealthSnapshot =
-  | { status: "loading" }
-  | { status: "connected"; health: HealthResponse }
-  | { status: "disconnected"; message: string };
+  | { phase: "loading" }
+  | { phase: "connected"; health: HealthResponse }
+  | { phase: "unavailable"; message: string };

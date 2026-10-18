@@ -1,79 +1,88 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { App } from "./App";
+import { describe, expect, it, vi } from "vitest";
+import App from "./App";
 
-function jsonResponse(body: unknown, init?: { ok?: boolean; status?: number }) {
-  return {
-    ok: init?.ok ?? true,
-    status: init?.status ?? 200,
-    json: async () => body,
-  } as Response;
+function jsonResponse(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
 }
 
-afterEach(() => {
-  vi.unstubAllGlobals();
-});
+const healthyPayload = { status: "ok", service: "QuantumShield India" };
 
-describe("backend connection status", () => {
-  it("displays a loading state while the health request is pending", () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn(() => new Promise(() => undefined)),
-    );
+describe("App", () => {
+  it("explains the learning platform and starts in a loading state", () => {
+    vi.stubGlobal("fetch", vi.fn().mockReturnValue(new Promise(() => undefined)));
 
     render(<App />);
 
-    expect(screen.getByRole("status")).toHaveTextContent(/checking backend connection/i);
-    expect(screen.getByRole("button", { name: /retry health check/i })).toBeDisabled();
+    expect(
+      screen.getByRole("heading", {
+        name: "Learn cybersecurity and emerging technology together.",
+      }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/public place to study cybersecurity/i)).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent(/checking whether the learning service/i);
+    expect(screen.getByRole("button", { name: "Check again" })).toBeDisabled();
   });
 
-  it("displays the connected state after a successful health request", async () => {
+  it("shows the health payload returned by the service", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse(healthyPayload)));
+
+    render(<App />);
+
+    expect(await screen.findByRole("definition", { name: "Status" })).toHaveTextContent("ok");
+    expect(screen.getByRole("definition", { name: "Service" })).toHaveTextContent(
+      "QuantumShield India",
+    );
+    expect(screen.getByRole("status")).toHaveTextContent(/connected/i);
+  });
+
+  it("shows an alert when the payload is malformed", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue(
-        jsonResponse({ status: "ok", service: "QuantumShield India" }),
+        new Response("not-json", {
+          status: 200,
+          headers: { "Content-Type": "text/plain" },
+        }),
       ),
     );
 
     render(<App />);
 
-    expect(await screen.findByText(/backend connected/i)).toBeInTheDocument();
-    expect(screen.getByText(/reports status ok/i)).toBeInTheDocument();
+    expect(await screen.findByRole("alert")).toHaveTextContent(/invalid JSON/i);
   });
 
-  it("displays the disconnected state when the health response is invalid", async () => {
+  it("shows an alert when the reported status is not ok", async () => {
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(jsonResponse({ status: "error", service: "other" })),
+      vi.fn().mockResolvedValue(
+        jsonResponse({ status: "starting", service: "QuantumShield India" }),
+      ),
     );
 
     render(<App />);
 
-    expect(await screen.findByText(/backend disconnected/i)).toBeInTheDocument();
-    expect(
-      screen.getByText(/did not match the expected health check format/i),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole("alert")).toHaveTextContent(/starting/i);
   });
 
-  it("requests the health check again when Retry is pressed", async () => {
+  it("retries a failed check and then shows the live payload", async () => {
     const fetchMock = vi
       .fn()
       .mockRejectedValueOnce(new TypeError("Failed to fetch"))
-      .mockResolvedValueOnce(jsonResponse({ status: "ok", service: "QuantumShield India" }));
+      .mockResolvedValueOnce(jsonResponse(healthyPayload));
     vi.stubGlobal("fetch", fetchMock);
-
     const user = userEvent.setup();
+
     render(<App />);
 
-    expect(await screen.findByText(/backend disconnected/i)).toBeInTheDocument();
-    expect(screen.getByText(/could not be reached/i)).toBeInTheDocument();
+    expect(await screen.findByRole("alert")).toHaveTextContent(/could not be reached/i);
+    await user.click(screen.getByRole("button", { name: "Check again" }));
 
-    await user.click(screen.getByRole("button", { name: /retry health check/i }));
-
-    await waitFor(() => {
-      expect(fetchMock).toHaveBeenCalledTimes(2);
-    });
-    expect(await screen.findByText(/backend connected/i)).toBeInTheDocument();
+    expect(await screen.findByRole("definition", { name: "Status" })).toHaveTextContent("ok");
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });

@@ -1,95 +1,93 @@
-import { LoaderCircle, RefreshCw, ShieldCheck, ShieldOff } from "lucide-react";
-import { healthEndpoint } from "../services/health";
+import { ArrowsClockwise, Check, XCircle } from "@phosphor-icons/react";
 import type { HealthSnapshot } from "../types/health";
 
-interface ConnectionStatusProps {
+type ConnectionStatusProps = {
   snapshot: HealthSnapshot;
   onRetry: () => void;
-  isChecking: boolean;
-}
+};
 
-export function ConnectionStatus({ snapshot, onRetry, isChecking }: ConnectionStatusProps) {
+const phaseLabel = {
+  loading: "Checking",
+  connected: "Connected",
+  unavailable: "Unavailable",
+} as const;
+
+export function ConnectionStatus({ snapshot, onRetry }: ConnectionStatusProps) {
+  const isUnavailable = snapshot.phase === "unavailable";
+  const message =
+    snapshot.phase === "loading"
+      ? "Checking whether the learning service is available."
+      : snapshot.phase === "connected"
+        ? `Connected. Status is ${snapshot.health.status}. Service is ${snapshot.health.service}.`
+        : snapshot.message;
+
   return (
     <section
-      id="system-status"
-      aria-labelledby="status-heading"
-      className="mx-auto max-w-6xl px-4 py-12 sm:px-6"
+      aria-labelledby="connection-heading"
+      aria-busy={snapshot.phase === "loading"}
+      className="glass-panel rounded-2xl p-5 sm:p-6"
     >
-      <div className="rounded-2xl border border-line bg-navy-900/80 p-6 sm:p-8">
-        <h2 id="status-heading" className="font-display text-2xl font-semibold tracking-tight text-white">
-          Backend connection
+      <div className="flex items-start justify-between gap-4">
+        <h2 id="connection-heading" className="font-heading text-xl font-semibold">
+          Service connection
         </h2>
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">
-          This dashboard asks the local QuantumShield API whether it is running. The status below
-          comes from that response. It is not assumed to be online.
+        <p
+          className={
+            snapshot.phase === "connected"
+              ? "inline-flex items-center gap-2 text-sm font-semibold text-ok"
+              : snapshot.phase === "unavailable"
+                ? "inline-flex items-center gap-2 text-sm font-semibold text-danger"
+                : "inline-flex items-center gap-2 text-sm font-semibold text-muted"
+          }
+        >
+          {snapshot.phase === "connected" ? (
+            <Check size={20} weight="regular" aria-hidden="true" />
+          ) : null}
+          {snapshot.phase === "unavailable" ? (
+            <XCircle size={20} weight="regular" aria-hidden="true" />
+          ) : null}
+          {phaseLabel[snapshot.phase]}
         </p>
-        <p className="mt-2 text-sm text-muted">
-          Endpoint: <span className="font-semibold text-mist">{healthEndpoint()}</span>
-        </p>
-
-        <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div role="status" aria-live="polite" aria-busy={isChecking} className="flex items-start gap-3">
-            <StatusIcon snapshot={snapshot} />
-            <div>
-              <StatusCopy snapshot={snapshot} />
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={onRetry}
-            disabled={isChecking}
-            aria-busy={isChecking}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-line bg-navy-950 px-4 text-sm font-semibold text-mist hover:border-cyan-accent hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isChecking ? (
-              <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
-            ) : (
-              <RefreshCw className="h-4 w-4" aria-hidden="true" />
-            )}
-            Retry health check
-          </button>
-        </div>
       </div>
+
+      <div
+        className="mt-4"
+        role={isUnavailable ? "alert" : "status"}
+        aria-live={isUnavailable ? "assertive" : "polite"}
+        aria-atomic="true"
+      >
+        <p className="text-base leading-relaxed">{message}</p>
+        {snapshot.phase === "connected" ? (
+          <dl className="mt-4 grid gap-3 sm:grid-cols-2">
+            <div>
+              <dt id="health-status-label" className="text-sm font-semibold text-muted">
+                Status
+              </dt>
+              <dd aria-labelledby="health-status-label" className="text-lg font-semibold">
+                {snapshot.health.status}
+              </dd>
+            </div>
+            <div>
+              <dt id="health-service-label" className="text-sm font-semibold text-muted">
+                Service
+              </dt>
+              <dd aria-labelledby="health-service-label" className="text-lg font-semibold">
+                {snapshot.health.service}
+              </dd>
+            </div>
+          </dl>
+        ) : null}
+      </div>
+
+      <button
+        type="button"
+        className="action-button mt-5 inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-lg bg-action px-4 text-base font-semibold text-white transition-colors duration-200 hover:bg-action-pressed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:cursor-not-allowed disabled:bg-disabled disabled:text-muted motion-reduce:transition-none"
+        onClick={onRetry}
+        disabled={snapshot.phase === "loading"}
+      >
+        <ArrowsClockwise size={20} weight="regular" aria-hidden="true" />
+        Check again
+      </button>
     </section>
-  );
-}
-
-function StatusIcon({ snapshot }: { snapshot: HealthSnapshot }) {
-  if (snapshot.status === "connected") {
-    return <ShieldCheck className="mt-0.5 h-6 w-6 shrink-0 text-emerald-300" aria-hidden="true" />;
-  }
-  if (snapshot.status === "disconnected") {
-    return <ShieldOff className="mt-0.5 h-6 w-6 shrink-0 text-rose-300" aria-hidden="true" />;
-  }
-  return <LoaderCircle className="mt-0.5 h-6 w-6 shrink-0 animate-spin text-blue-accent" aria-hidden="true" />;
-}
-
-function StatusCopy({ snapshot }: { snapshot: HealthSnapshot }) {
-  if (snapshot.status === "loading") {
-    return (
-      <>
-        <p className="font-semibold text-white">Checking backend connection</p>
-        <p className="mt-1 text-sm text-muted">Waiting for the health check to finish.</p>
-      </>
-    );
-  }
-
-  if (snapshot.status === "connected") {
-    return (
-      <>
-        <p className="font-semibold text-white">Backend connected</p>
-        <p className="mt-1 text-sm text-muted">
-          {snapshot.health.service} reports status {snapshot.health.status}.
-        </p>
-      </>
-    );
-  }
-
-  return (
-    <>
-      <p className="font-semibold text-white">Backend disconnected</p>
-      <p className="mt-1 text-sm text-rose-200">{snapshot.message}</p>
-    </>
   );
 }

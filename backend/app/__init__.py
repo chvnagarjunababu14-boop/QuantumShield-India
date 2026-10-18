@@ -1,1 +1,1 @@
-"""QuantumShield India API (Phase 1)."""
+"""QuantumShield India API."""
