@@ -1,8 +1,35 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import App from "../App";
+
+vi.mock("../api/insforge", () => ({
+  isInsForgeConfigured: vi.fn(() => true),
+  getInsForgeClient: vi.fn(() => ({
+    auth: {
+      getCurrentUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
+      onAuthStateChange: vi.fn(() => () => {}),
+      signInWithPassword: vi.fn().mockResolvedValue({ data: null, error: { message: "Invalid email or password." } }),
+      signUp: vi.fn().mockResolvedValue({ data: null, error: { message: "Unable to create account." } }),
+      signOut: vi.fn().mockResolvedValue({ error: null }),
+    },
+    database: {
+      from: vi.fn(() => ({
+        select: vi.fn().mockReturnThis(),
+        insert: vi.fn().mockReturnThis(),
+        update: vi.fn().mockReturnThis(),
+        upsert: vi.fn().mockReturnThis(),
+        delete: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        order: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({ data: null, error: null }),
+        maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+      })),
+    },
+  })),
+  resetInsForgeClient: vi.fn(),
+}));
 
 function renderAt(path: string) {
   return render(
@@ -25,11 +52,11 @@ describe("Learner experience and authentication flows", () => {
     ).toBeInTheDocument();
   });
 
-  it("prompts signed-out users to sign in when accessing the learning dashboard", () => {
+  it("prompts signed-out users to sign in when accessing the learning dashboard", async () => {
     renderAt("/learning");
 
     expect(
-      screen.getByRole("heading", { name: /Sign in to access your learning dashboard/i }),
+      await screen.findByRole("heading", { name: /Sign in to access your learning dashboard/i }),
     ).toBeInTheDocument();
     const main = screen.getByRole("main");
     expect(within(main).getByRole("link", { name: "Sign In" })).toHaveAttribute(
