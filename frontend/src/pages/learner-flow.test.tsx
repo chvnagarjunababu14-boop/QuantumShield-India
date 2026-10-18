@@ -12,6 +12,8 @@ vi.mock("../api/insforge", () => ({
       onAuthStateChange: vi.fn(() => () => {}),
       signInWithPassword: vi.fn().mockResolvedValue({ data: null, error: { message: "Invalid email or password." } }),
       signUp: vi.fn().mockResolvedValue({ data: null, error: { message: "Unable to create account." } }),
+      verifyEmail: vi.fn().mockResolvedValue({ data: null, error: { message: "Invalid code." } }),
+      resendVerificationEmail: vi.fn().mockResolvedValue({ data: { success: true, message: "Code sent." }, error: null }),
       signOut: vi.fn().mockResolvedValue({ error: null }),
     },
     database: {

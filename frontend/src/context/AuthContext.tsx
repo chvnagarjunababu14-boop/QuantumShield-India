@@ -9,6 +9,7 @@ import {
 import { getInsForgeClient, isInsForgeConfigured } from "../api/insforge";
 import { fetchLearnerProfile, upsertLearnerProfile } from "../api/learning";
 import type { AuthUser, LearnerProfile } from "../types/learning";
+import { formatAuthError } from "../utils/auth-errors";
 
 interface AuthContextValue {
   user: AuthUser | null;
@@ -16,8 +17,27 @@ interface AuthContextValue {
   isLoading: boolean;
   isConfigured: boolean;
   error: string | null;
-  signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  signUp: (email: string, password: string, displayName?: string) => Promise<{ success: boolean; error?: string }>;
+  signIn: (
+    email: string,
+    password: string,
+  ) => Promise<{ success: boolean; requireVerification?: boolean; error?: string }>;
+  signUp: (
+    email: string,
+    password: string,
+    displayName?: string,
+  ) => Promise<{
+    success: boolean;
+    requireVerification?: boolean;
+    email?: string;
+    error?: string;
+  }>;
+  verifyEmail: (
+    email: string,
+    otp: string,
+  ) => Promise<{ success: boolean; error?: string }>;
+  resendVerificationCode: (
+    email: string,
+  ) => Promise<{ success: boolean; message?: string; error?: string }>;
   signOut: () => Promise<void>;
   updateDisplayName: (displayName: string) => Promise<{ success: boolean; error?: string }>;
   refreshProfile: () => Promise<void>;
@@ -47,7 +67,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile(dbProfile);
       } else {
         // If profile row doesn't exist yet, initialize it
-        const fallbackName = clientUser.displayName || clientUser.email.split("@")[0] || "Learner";
+        const fallbackName =
+          clientUser.displayName || clientUser.email.split("@")[0] || "Learner";
         try {
           const newProfile = await upsertLearnerProfile(client, {
             userId: clientUser.id,
@@ -71,7 +92,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile({
         id: clientUser.id,
         user_id: clientUser.id,
-        display_name: clientUser.displayName || clientUser.email.split("@")[0] || "Learner",
+        display_name:
+          clientUser.displayName || clientUser.email.split("@")[0] || "Learner",
         avatar_url: null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -115,7 +137,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (isMounted) {
           setUser(null);
           setProfile(null);
-          setError(err instanceof Error ? err.message : "Failed to restore session");
+          setError(
+            formatAuthError(err, "Failed to restore authentication session."),
+          );
         }
       } finally {
         if (isMounted) {
@@ -147,23 +171,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [configured, loadUserProfile]);
 
   const signIn = useCallback(
-    async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    async (
+      email: string,
+      password: string,
+    ): Promise<{ success: boolean; requireVerification?: boolean; error?: string }> => {
       setError(null);
       const client = getInsForgeClient();
       if (!client) {
-        const msg = "InsForge backend is not configured. Please check environment variables.";
+        const msg =
+          "InsForge backend is not configured. Please check environment variables.";
         setError(msg);
         return { success: false, error: msg };
       }
 
       try {
-        const { data, error: signInError } = await client.auth.signInWithPassword({
-          email: email.trim(),
-          password,
-        });
+        const trimmedEmail = email.trim();
+        const { data, error: signInError } =
+          await client.auth.signInWithPassword({
+            email: trimmedEmail,
+            password,
+          });
 
-        if (signInError || !data?.user) {
-          const msg = signInError?.message || "Invalid email or password.";
+        if (signInError) {
+          const rawErr = (signInError.error || "").toUpperCase();
+          const rawMsg = signInError.message || "";
+          const isPendingVerification =
+            rawErr === "AUTH_NEED_VERIFICATION" ||
+            /verify|verification|not verified/i.test(rawMsg);
+
+          if (isPendingVerification) {
+            const msg =
+              "Your email address is not verified yet. Please enter the verification code sent to your email.";
+            setError(msg);
+            return { success: false, requireVerification: true, error: msg };
+          }
+
+          const msg = formatAuthError(signInError, "Invalid email or password.");
+          setError(msg);
+          return { success: false, error: msg };
+        }
+
+        if (!data?.user) {
+          const msg = "Invalid email or password.";
           setError(msg);
           return { success: false, error: msg };
         }
@@ -179,7 +228,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await loadUserProfile(authUser);
         return { success: true };
       } catch (err) {
-        const msg = err instanceof Error ? err.message : "Authentication failed.";
+        const msg = formatAuthError(err, "Authentication failed.");
         setError(msg);
         return { success: false, error: msg };
       }
@@ -188,24 +237,137 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const signUp = useCallback(
-    async (email: string, password: string, displayName?: string): Promise<{ success: boolean; error?: string }> => {
+    async (
+      email: string,
+      password: string,
+      displayName?: string,
+    ): Promise<{
+      success: boolean;
+      requireVerification?: boolean;
+      email?: string;
+      error?: string;
+    }> => {
       setError(null);
       const client = getInsForgeClient();
       if (!client) {
-        const msg = "InsForge backend is not configured. Please check environment variables.";
+        const msg =
+          "InsForge backend is not configured. Please check environment variables.";
         setError(msg);
         return { success: false, error: msg };
       }
 
       try {
+        const trimmedEmail = email.trim();
         const { data, error: signUpError } = await client.auth.signUp({
-          email: email.trim(),
+          email: trimmedEmail,
           password,
           name: displayName?.trim() || undefined,
         });
 
-        if (signUpError || !data?.user) {
-          const msg = signUpError?.message || "Registration failed.";
+        if (signUpError) {
+          const msg = formatAuthError(
+            signUpError,
+            "Unable to create account. Please check your details and try again.",
+          );
+          setError(msg);
+          return { success: false, error: msg };
+        }
+
+        // InsForge requires email verification
+        if (
+          data?.requireEmailVerification ||
+          (data?.user && !data.accessToken)
+        ) {
+          return {
+            success: true,
+            requireVerification: true,
+            email: trimmedEmail,
+          };
+        }
+
+        if (!data?.user) {
+          const msg =
+            "Unable to complete registration. Please try again in a few moments.";
+          setError(msg);
+          return { success: false, error: msg };
+        }
+
+        // In environments where verification is disabled and session is established immediately:
+        const rawUser = data.user;
+        const authUser: AuthUser = {
+          id: rawUser.id,
+          email: rawUser.email,
+          emailVerified: rawUser.emailVerified ?? false,
+          displayName:
+            displayName?.trim() ||
+            ((rawUser.profile?.name as string | undefined) ?? null),
+        };
+        setUser(authUser);
+
+        try {
+          const newProfile = await upsertLearnerProfile(client, {
+            userId: authUser.id,
+            displayName:
+              displayName?.trim() ||
+              authUser.email.split("@")[0] ||
+              "Learner",
+          });
+          setProfile(newProfile);
+        } catch {
+          setProfile({
+            id: authUser.id,
+            user_id: authUser.id,
+            display_name:
+              displayName?.trim() ||
+              authUser.email.split("@")[0] ||
+              "Learner",
+            avatar_url: null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          });
+        }
+
+        return { success: true, requireVerification: false };
+      } catch (err) {
+        const msg = formatAuthError(
+          err,
+          "Unable to create account. Please check your details and try again.",
+        );
+        setError(msg);
+        return { success: false, error: msg };
+      }
+    },
+    [],
+  );
+
+  const verifyEmail = useCallback(
+    async (
+      email: string,
+      otp: string,
+    ): Promise<{ success: boolean; error?: string }> => {
+      setError(null);
+      const client = getInsForgeClient();
+      if (!client) {
+        const msg =
+          "InsForge backend is not configured. Please check environment variables.";
+        setError(msg);
+        return { success: false, error: msg };
+      }
+
+      try {
+        const trimmedEmail = email.trim();
+        const trimmedOtp = otp.trim();
+
+        const { data, error: verifyError } = await client.auth.verifyEmail({
+          email: trimmedEmail,
+          otp: trimmedOtp,
+        });
+
+        if (verifyError || !data?.user) {
+          const msg = formatAuthError(
+            verifyError,
+            "The verification code is invalid or has expired. Please check your code or request a new one.",
+          );
           setError(msg);
           return { success: false, error: msg };
         }
@@ -214,34 +376,62 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const authUser: AuthUser = {
           id: rawUser.id,
           email: rawUser.email,
-          emailVerified: rawUser.emailVerified ?? false,
-          displayName: displayName?.trim() || ((rawUser.profile?.name as string | undefined) ?? null),
+          emailVerified: rawUser.emailVerified ?? true,
+          displayName: (rawUser.profile?.name as string | undefined) ?? null,
         };
         setUser(authUser);
-
-        // Create learner profile record in database
-        try {
-          const newProfile = await upsertLearnerProfile(client, {
-            userId: authUser.id,
-            displayName: displayName?.trim() || authUser.email.split("@")[0] || "Learner",
-          });
-          setProfile(newProfile);
-        } catch {
-          // Fallback if table insert fails
-          setProfile({
-            id: authUser.id,
-            user_id: authUser.id,
-            display_name: displayName?.trim() || authUser.email.split("@")[0] || "Learner",
-            avatar_url: null,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          });
-        }
-
+        await loadUserProfile(authUser);
         return { success: true };
       } catch (err) {
-        const msg = err instanceof Error ? err.message : "Registration failed.";
+        const msg = formatAuthError(
+          err,
+          "The verification code is invalid or has expired. Please check your code or request a new one.",
+        );
         setError(msg);
+        return { success: false, error: msg };
+      }
+    },
+    [loadUserProfile],
+  );
+
+  const resendVerificationCode = useCallback(
+    async (
+      email: string,
+    ): Promise<{ success: boolean; message?: string; error?: string }> => {
+      setError(null);
+      const client = getInsForgeClient();
+      if (!client) {
+        const msg =
+          "InsForge backend is not configured. Please check environment variables.";
+        return { success: false, error: msg };
+      }
+
+      try {
+        const trimmedEmail = email.trim();
+        const { data, error: resendError } =
+          await client.auth.resendVerificationEmail({
+            email: trimmedEmail,
+          });
+
+        if (resendError) {
+          const msg = formatAuthError(
+            resendError,
+            "Unable to resend verification code. Please wait a moment before trying again.",
+          );
+          return { success: false, error: msg };
+        }
+
+        return {
+          success: true,
+          message:
+            data?.message ||
+            "A new 6-digit verification code has been sent to your email.",
+        };
+      } catch (err) {
+        const msg = formatAuthError(
+          err,
+          "Unable to resend verification code. Please wait a moment before trying again.",
+        );
         return { success: false, error: msg };
       }
     },
@@ -279,7 +469,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           displayName: displayName.trim(),
         });
         setProfile(updated);
-        setUser((prev) => (prev ? { ...prev, displayName: displayName.trim() } : null));
+        setUser((prev) =>
+          prev ? { ...prev, displayName: displayName.trim() } : null,
+        );
         return { success: true };
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Failed to update profile";
@@ -305,16 +497,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       error,
       signIn,
       signUp,
+      verifyEmail,
+      resendVerificationCode,
       signOut,
       updateDisplayName,
       refreshProfile,
       clearError,
     }),
-    [user, profile, isLoading, configured, error, signIn, signUp, signOut, updateDisplayName, refreshProfile, clearError],
+    [
+      user,
+      profile,
+      isLoading,
+      configured,
+      error,
+      signIn,
+      signUp,
+      verifyEmail,
+      resendVerificationCode,
+      signOut,
+      updateDisplayName,
+      refreshProfile,
+      clearError,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export { AuthContext, type AuthContextValue };
-
